@@ -1,0 +1,63 @@
+- name: Set timezone to UTC
+  community.general.timezone:
+    name: UTC
+
+- name: Include packages variables
+  include_vars:
+    file: vars/packages.yml
+
+- name: Install base packages
+  ansible.builtin.apt:
+    pkg: "{{ base_packages }}"
+    state: present
+    update_cache: yes
+
+- name: Remove the user 'debian'
+  ansible.builtin.user:
+    name: debian
+    state: absent
+    remove: yes
+  ignore_errors: yes
+
+- name: Set kernel parameter net.ipv4.ip_local_port_range
+  ansible.posix.sysctl:
+    name: net.ipv4.ip_local_port_range
+    value: "1024 65535"
+    state: present
+    reload: yes
+    sysctl_file: /etc/sysctl.d/99-custom.conf
+
+- name: Set kernel parameter fs.nr_open
+  ansible.posix.sysctl:
+    name: fs.nr_open
+    value: "2000000"
+    state: present
+    reload: yes
+    sysctl_file: /etc/sysctl.d/99-custom.conf
+
+- name: Set kernel parameter fs.file-max
+  ansible.posix.sysctl:
+    name: fs.file-max
+    value: "5000000"
+    state: present
+    reload: yes
+    sysctl_file: /etc/sysctl.d/99-custom.conf
+
+- name: Configure systemd user limits in system.conf
+  ansible.builtin.lineinfile:
+    path: /etc/systemd/system.conf
+    regexp: '^#?DefaultLimitNOFILE='
+    line: 'DefaultLimitNOFILE=6500535'
+    state: present
+    backup: yes
+
+- name: Configure PAM limits in limits.conf
+  ansible.builtin.blockinfile:
+    path: /etc/security/limits.conf
+    block: |
+      root hard nofile 6500536
+      root soft nofile 6500535
+      * soft nofile 40000000
+      * hard nofile 40000000
+    marker: "# {mark} ANSIBLE MANAGED BLOCK - user limits"
+    state: present

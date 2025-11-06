@@ -1,0 +1,85 @@
+- name: Install build dependencies for Python
+  apt:
+    name:
+      - build-essential
+      - zlib1g-dev
+      - libncurses5-dev
+      - libgdbm-dev
+      - libnss3-dev
+      - libssl-dev
+      - libreadline-dev
+      - libffi-dev
+      - libsqlite3-dev
+      - libbz2-dev
+      - libcurl4-openssl-dev
+    state: present
+
+- name: Create Python download directory
+  file:
+    path: "/home/{{ ansible_user }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: '0755'
+  when: ansible_user != "root"
+
+- name: Download Python 3.13.5
+  get_url:
+    url: "https://www.python.org/ftp/python/3.13.5/Python-3.13.5.tgz"
+    dest: "/home/{{ ansible_user }}/Python-3.13.5.tgz"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Extract Python source code
+  unarchive:
+    src: "/home/{{ ansible_user }}/Python-3.13.5.tgz"
+    dest: "/home/{{ ansible_user }}/"
+    remote_src: yes
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+
+- name: Configure Python with prefix
+  command: "./configure --prefix=/opt/python3"
+  args:
+    chdir: "/home/{{ ansible_user }}/Python-3.13.5"
+
+- name: Build Python
+  command: "make"
+  args:
+    chdir: "/home/{{ ansible_user }}/Python-3.13.5"
+
+- name: Install Python
+  command: "make install"
+  args:
+    chdir: "/home/{{ ansible_user }}/Python-3.13.5"
+
+- name: Upgrade pip
+  command: "/opt/python3/bin/pip3 install --upgrade pip"
+
+- name: Install Python packages
+  pip:
+    executable: "/opt/python3/bin/pip3"
+    name:
+      - pycurl
+      #- mysqlclient
+      #- mysql-connector-python
+      - certifi
+      - redis
+      - sentry-sdk
+    state: present
+
+- name: Verify Python installation
+  command: "/opt/python3/bin/python3 --version"
+  register: python_version_result
+  changed_when: false
+
+- name: Verify pip installation
+  command: "/opt/python3/bin/pip3 --version"
+  register: pip_version_result
+  changed_when: false
+
+- name: Show installation results
+  debug:
+    msg:
+      - "Python: {{ python_version_result.stdout }}"
+      - "Pip: {{ pip_version_result.stdout }}"

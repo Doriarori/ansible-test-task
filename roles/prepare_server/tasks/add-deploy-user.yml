@@ -1,0 +1,36 @@
+- name: Add user "deploy"
+  ansible.builtin.user:
+    name: deploy
+    comment: deploy
+    uid: 1040
+    home: /home/deploy
+    shell: /bin/bash
+    create_home: yes
+
+- name: Create .ssh directory
+  ansible.builtin.file:
+    path: /home/deploy/.ssh/
+    state: directory
+    owner: deploy
+    mode: '0700'  
+
+- name: Copy SSH public key to authorized_keys
+  ansible.builtin.copy:
+    src: files/dev_id_rsa.pub  
+    dest: /home/deploy/.ssh/authorized_keys  
+    owner: deploy
+    mode: '0600'
+
+- name: Copy SSH public key
+  ansible.builtin.copy:
+    src: files/dev_id_rsa.pub 
+    dest: /home/deploy/.ssh/id_rsa.pub  
+    owner: deploy
+    mode: '0644'
+
+- name: Copy SSH private key
+  ansible.builtin.copy:
+    src: files/dev_id_rsa 
+    dest: /home/deploy/.ssh/id_rsa  
+    owner: deploy
+    mode: '0600'

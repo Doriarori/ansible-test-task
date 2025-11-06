@@ -1,0 +1,20 @@
+---
+- name: Prepare server for deployment
+  hosts: web_server_instances  # или all, или web_server_1
+  gather_facts: true
+  
+  # Убираем переменные подключения, они теперь в host_vars
+  vars:
+    ansible_become: yes
+    ansible_become_method: sudo
+
+  pre_tasks:
+    - name: Show connection info
+      debug:
+        msg: "Connecting to {{ ansible_host }} as {{ ansible_user }}"
+
+    - name: Test SSH connection
+      ping:
+
+  roles:
+    - prepare_server

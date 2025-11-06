@@ -1,0 +1,30 @@
+---
+- name: Install PHP and dependencies
+  apt:
+    name:
+      - php
+      - php-cli
+      - php-curl
+      - php-zip
+      - unzip
+    state: present
+
+- name: Download and install Composer
+  shell: |
+    curl -sS https://getcomposer.org/installer | php
+    mv composer.phar /usr/local/bin/composer
+    chmod +x /usr/local/bin/composer
+  args:
+    creates: /usr/local/bin/composer
+
+- name: Verify Composer installation with timeout
+  command: composer --version
+  register: composer_check
+  changed_when: false
+  async: 10
+  poll: 2
+
+- name: Show Composer version if successful
+  debug:
+    msg: "{{ composer_check.stdout }}"
+  when: composer_check.failed == false

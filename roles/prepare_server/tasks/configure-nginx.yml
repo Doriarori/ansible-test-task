@@ -1,0 +1,73 @@
+- name: Install Nginx
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    allow_downgrade: no
+
+- name: Create nginx projects directories
+  file:
+    path: "{{ dir_path }}"
+    state: directory
+    owner: deploy
+  loop:
+    - /etc/nginx/projects_conf
+    - /etc/nginx/projects
+    - /etc/nginx/projects/panels
+  loop_control:
+    loop_var: dir_path 
+
+- name: Set recursive ownership and permissions for projects
+  file:
+    path: /etc/nginx/projects
+    owner: deploy
+    mode: '0777'
+    recurse: yes
+
+- name: Create GeoIP runtime directory
+  file:
+    path: /var/www/server/frontend/shared/runtime/GeoIP
+    state: directory
+    owner: deploy
+    mode: '0755'
+    recurse: yes
+
+- name: Copy Nginx config file
+  ansible.builtin.template:
+    src: files/nginx.conf_
+    dest: /etc/nginx/nginx.conf
+    owner: deploy
+    mode: '0755'
+
+- name: Create default nginx site configuration
+  copy:
+    content: |
+      server {
+          listen 80 default_server;
+          listen [::]:80 default_server;
+          
+          root /var/www/html;
+          index index.html index.htm index.nginx-debian.html;
+          
+          server_name _;
+          
+          location / {
+              try_files $uri $uri/ =404;
+          }
+      }
+    dest: /etc/nginx/default.conf
+    owner: deploy
+    mode: '0644'
+
+- name: Validate Nginx configuration
+  command: nginx -t
+  register: nginx_validation
+  changed_when: false
+  failed_when: nginx_validation.rc != 0
+  notify: restart nginx
+
+
+- name: Ensure Nginx is enabled and started
+  systemd:
+    name: nginx
+    state: started
+    enabled: yes
