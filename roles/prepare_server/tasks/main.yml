@@ -1,9 +1,11 @@
 ---
-# - include_tasks: add-deploy-user.yml
-# - include_tasks: change-server-properties.yml
-# - include_tasks: configure-python.yml
-# - include_tasks: install-composer.yml
-# - include_tasks: configure-nginx.yml
-#- include_tasks: configure-mysql.yml
+- include_tasks: add-deploy-user.yml
+- include_tasks: change-server-properties.yml
+- include_tasks: configure-python.yml
+- include_tasks: install-composer.yml
+- include_tasks: configure-nginx.yml
 - include_tasks: reboot-server.yml  
 
+
+
+#- include_tasks: configure-mysql.yml
