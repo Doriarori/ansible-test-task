@@ -68,14 +68,6 @@
 - name: Upgrade pip (always run)
   command: "/opt/python3/bin/pip3 install --upgrade pip"
 
-- name: Install build dependencies for mysqlclient
-  apt:
-    name:
-      - python3-dev
-      - libmysqlclient-dev
-      - pkg-config
-    state: present
-
 - name: Install Python packages (always run)
   pip:
     executable: "/opt/python3/bin/pip3"

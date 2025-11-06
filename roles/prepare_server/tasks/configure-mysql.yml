@@ -1,12 +1,4 @@
 ---
-- name: Install prerequisites
-  apt:
-    name:
-      - wget
-      - gnupg
-      - debconf-utils
-    state: present
-
 - name: Download MySQL APT configuration using wget
   shell: |
     wget -O /tmp/mysql-apt-config.deb --user-agent="Mozilla/5.0" "https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb"

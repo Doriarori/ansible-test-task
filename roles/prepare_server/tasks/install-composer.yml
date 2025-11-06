@@ -17,7 +17,7 @@
   args:
     creates: /usr/local/bin/composer
 
-- name: Verify Composer installation with timeout
+- name: Verify Composer installation 
   command: composer --version
   register: composer_check
   changed_when: false

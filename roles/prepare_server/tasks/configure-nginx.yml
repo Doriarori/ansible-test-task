@@ -1,9 +1,26 @@
-- name: Install Nginx
-  ansible.builtin.apt:
+---
+- name: Install Nginx without starting service
+  apt:
     name: nginx
     state: present
-    allow_downgrade: no
+  environment:
+    SYSTEMD_EDITOR: "true"
+    
+##### На тестовой вм с Deb13 столкнулся с лимитами. Эти шаги - обход проблемы
+- name: Create nginx systemd service directory
+  file:
+    path: /etc/systemd/system/nginx.service.d
+    state: directory
+    mode: '0755'
 
+- name: Fix Nginx systemd service limits 
+  copy:
+    content: |
+      [Service]
+      LimitNOFILE=65536
+    dest: /etc/systemd/system/nginx.service.d/override.conf
+    mode: '0644'
+#####
 - name: Create nginx projects directories
   file:
     path: "{{ dir_path }}"
