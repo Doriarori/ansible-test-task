@@ -1,3 +1,9 @@
+---
+- name: Check if Python 3.13 is already installed
+  stat:
+    path: /opt/python3/bin/python3
+  register: python_installed
+
 - name: Install build dependencies for Python
   apt:
     name:
@@ -13,6 +19,7 @@
       - libbz2-dev
       - libcurl4-openssl-dev
     state: present
+  when: not python_installed.stat.exists
 
 - name: Create Python download directory
   file:
@@ -21,7 +28,7 @@
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
     mode: '0755'
-  when: ansible_user != "root"
+  when: ansible_user != "root" and not python_installed.stat.exists
 
 - name: Download Python 3.13.5
   get_url:
@@ -29,6 +36,7 @@
     dest: "/home/{{ ansible_user }}/Python-3.13.5.tgz"
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
+  when: not python_installed.stat.exists
 
 - name: Extract Python source code
   unarchive:
@@ -37,32 +45,43 @@
     remote_src: yes
     owner: "{{ ansible_user }}"
     group: "{{ ansible_user }}"
+  when: not python_installed.stat.exists
 
 - name: Configure Python with prefix
   command: "./configure --prefix=/opt/python3"
   args:
     chdir: "/home/{{ ansible_user }}/Python-3.13.5"
+  when: not python_installed.stat.exists
 
 - name: Build Python
   command: "make"
   args:
     chdir: "/home/{{ ansible_user }}/Python-3.13.5"
+  when: not python_installed.stat.exists
 
 - name: Install Python
   command: "make install"
   args:
     chdir: "/home/{{ ansible_user }}/Python-3.13.5"
+  when: not python_installed.stat.exists
 
-- name: Upgrade pip
+- name: Upgrade pip (always run)
   command: "/opt/python3/bin/pip3 install --upgrade pip"
 
-- name: Install Python packages
+- name: Install build dependencies for mysqlclient
+  apt:
+    name:
+      - python3-dev
+      - libmysqlclient-dev
+      - pkg-config
+    state: present
+
+- name: Install Python packages (always run)
   pip:
     executable: "/opt/python3/bin/pip3"
     name:
       - pycurl
-      #- mysqlclient
-      #- mysql-connector-python
+      - mysqlclient
       - certifi
       - redis
       - sentry-sdk

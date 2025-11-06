@@ -1,41 +1,90 @@
 ---
-- name: Install MySQL Python client for Ansible
+- name: Install prerequisites
   apt:
-    name: python3-pymysql
+    name:
+      - wget
+      - gnupg
+      - debconf-utils  # ← добавляем для работы с debconf
     state: present
 
-- name: Install MariaDB Server
-  apt:
-    name: mariadb-server
-    state: present
+- name: Download MySQL APT configuration using wget
+  shell: |
+    wget -O /tmp/mysql-apt-config.deb --user-agent="Mozilla/5.0" "https://dev.mysql.com/get/mysql-apt-config_0.8.36-1_all.deb"
+  args:
+    creates: /tmp/mysql-apt-config.deb
 
-- name: Start MariaDB service
+- name: Preconfigure MySQL repository selection
+  shell: |
+    echo "mysql-apt-config mysql-apt-config/select-server select mysql-8.0" | debconf-set-selections
+    echo "mysql-apt-config mysql-apt-config/select-product select Ok" | debconf-set-selections
+
+- name: Install MySQL APT configuration non-interactively
+  command: dpkg -i /tmp/mysql-apt-config.deb
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Update apt cache
+  apt:
+    update_cache: yes
+
+- name: Set MySQL root password in debconf (if not set)
+  shell: |
+    echo "mysql-server mysql-server/root_password password 12345678" | debconf-set-selections
+    echo "mysql-server mysql-server/root_password_again password 12345678" | debconf-set-selections
+  when: mysql_password_check is defined and mysql_password_check.failed
+
+- name: Install MySQL Server
+  apt:
+    name: mysql-server
+    state: present
+  environment:
+    DEBIAN_FRONTEND: noninteractive
+
+- name: Check if MySQL root password is already set
+  shell: |
+    mysql -u root -p12345678 -e "SELECT 1;" 2>/dev/null && echo "PASSWORD_SET" || echo "PASSWORD_NOT_SET"
+  register: mysql_password_check
+  changed_when: false
+  ignore_errors: yes
+
+- name: Set MySQL root password only if needed
+  block:
+    - name: Set root password using mysql command
+      shell: |
+        mysql -u root <<EOF
+        ALTER USER 'root'@'localhost' IDENTIFIED BY '12345678';
+        FLUSH PRIVILEGES;
+        EOF
+      args:
+        executable: /bin/bash
+      when: mysql_password_check.stdout == "PASSWORD_NOT_SET"
+
+    - name: Secure MySQL installation
+      shell: |
+        mysql -u root -p12345678 <<EOF
+        DELETE FROM mysql.user WHERE User='';
+        DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');
+        DROP DATABASE IF EXISTS test;
+        DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';
+        FLUSH PRIVILEGES;
+        EOF
+      args:
+        executable: /bin/bash
+  when: mysql_password_check.stdout == "PASSWORD_NOT_SET"
+
+- name: Ensure MySQL service is running
   systemd:
-    name: mariadb
+    name: mysql
     state: started
     enabled: yes
 
-- name: Wait for MariaDB to start
-  wait_for:
-    port: 3306
-    delay: 10
-    timeout: 60
-
-- name: Set root password using shell (обходной путь)
-  shell: |
-    mysql -u root <<EOF
-    ALTER USER 'root'@'localhost' IDENTIFIED BY '12345678';
-    FLUSH PRIVILEGES;
-    EOF
-  args:
-    executable: /bin/bash
-  when: ansible_python_interpreter is defined
-
-- name: Verify installation
+- name: Verify MySQL installation
   command: mysql -u root -p12345678 -e "SELECT VERSION();"
-  register: db_info
+  register: mysql_version
   changed_when: false
 
-- name: Show database info
+- name: Show MySQL version
   debug:
-    msg: "{{ db_info.stdout }}"
+    msg: "{{ mysql_version.stdout }}"
+
+    

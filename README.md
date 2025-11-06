@@ -1,10 +1,18 @@
-# ansible-test-task
-Репозиторий для выполнения тестового задания по написанию Ansible Playbook.
+### Переменные:
 
-Осталось: MySQL 5.7, composer
+Для запуска плейбука необходимо указать параметры подключения к серверу, в файле конфигурации /host_vars/web_server_1.yml
 
+```
+ansible_host: ANSIBLE_HOST
+ansible_user: ANSIBLE_USER
+ansible_ssh_private_key_file: KEY_FILE_PATH
+```
+, где: 
+ANSIBLE_HOST - адрес подключения к серверу
+ANSIBLE_USER - пользователь с sudo правами
+KEY_FILE_PATH - путь до ssh ключа. 
 
-### ansible-playbook prepare_server.yml -i inventory/hosts.yml -e "ssh_user=undertaker ssh_private_key_path=/Users/mac/.ssh/id_rsa"
-
-
-### ansible-playbook prepare_server.yml
+После указания переменных можно запустить плейбук командой: 
+```
+ansible-playbook prepare_server.yml
+```
