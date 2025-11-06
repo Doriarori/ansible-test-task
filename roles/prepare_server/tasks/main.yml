@@ -2,9 +2,10 @@
 - name: Include all tasks
   include_tasks: "{{ item }}"
   with_items:
-    - add-deploy-user.yml
-    - change-server-properties.yml
-    - configure-python.yml
-    - configure-nginx.yml
-    #- configure-mysql.yml
-    - install-composer.yml
+    #- add-deploy-user.yml
+    #- change-server-properties.yml
+    #- configure-python.yml
+    #- configure-nginx.yml
+    - configure-mysql.yml
+    #- install-composer.yml
+

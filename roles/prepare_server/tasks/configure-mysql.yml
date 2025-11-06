@@ -1,0 +1,41 @@
+---
+- name: Install MySQL Python client for Ansible
+  apt:
+    name: python3-pymysql
+    state: present
+
+- name: Install MariaDB Server
+  apt:
+    name: mariadb-server
+    state: present
+
+- name: Start MariaDB service
+  systemd:
+    name: mariadb
+    state: started
+    enabled: yes
+
+- name: Wait for MariaDB to start
+  wait_for:
+    port: 3306
+    delay: 10
+    timeout: 60
+
+- name: Set root password using shell (обходной путь)
+  shell: |
+    mysql -u root <<EOF
+    ALTER USER 'root'@'localhost' IDENTIFIED BY '12345678';
+    FLUSH PRIVILEGES;
+    EOF
+  args:
+    executable: /bin/bash
+  when: ansible_python_interpreter is defined
+
+- name: Verify installation
+  command: mysql -u root -p12345678 -e "SELECT VERSION();"
+  register: db_info
+  changed_when: false
+
+- name: Show database info
+  debug:
+    msg: "{{ db_info.stdout }}"

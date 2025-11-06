@@ -9,6 +9,7 @@
     path: "{{ dir_path }}"
     state: directory
     owner: deploy
+    group: deploy
   loop:
     - /etc/nginx/projects_conf
     - /etc/nginx/projects
@@ -20,6 +21,7 @@
   file:
     path: /etc/nginx/projects
     owner: deploy
+    group: deploy
     mode: '0777'
     recurse: yes
 
@@ -28,6 +30,7 @@
     path: /var/www/server/frontend/shared/runtime/GeoIP
     state: directory
     owner: deploy
+    group: deploy
     mode: '0755'
     recurse: yes
 
@@ -36,6 +39,7 @@
     src: files/nginx.conf_
     dest: /etc/nginx/nginx.conf
     owner: deploy
+    group: deploy
     mode: '0755'
 
 - name: Create default nginx site configuration
@@ -56,6 +60,7 @@
       }
     dest: /etc/nginx/default.conf
     owner: deploy
+    group: deploy
     mode: '0644'
 
 - name: Validate Nginx configuration

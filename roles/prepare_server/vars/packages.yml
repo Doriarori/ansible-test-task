@@ -19,15 +19,15 @@ base_packages:
   - htop
   - nload
   - libffi-dev
-  #- libmariadbclient-dev
+  - libmariadb-dev
   - gnupg2
   - pkg-config
   - tcl
   - git
   - sendmail
   - openssl
-  #- python-minimal
-  #- python-setuptools
+  - python3-minimal
+  - python3-setuptools
   - screen
   - ethtool
   - openssl
