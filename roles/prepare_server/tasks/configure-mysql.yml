@@ -4,7 +4,7 @@
     name:
       - wget
       - gnupg
-      - debconf-utils  # ← добавляем для работы с debconf
+      - debconf-utils
     state: present
 
 - name: Download MySQL APT configuration using wget
@@ -87,4 +87,3 @@
   debug:
     msg: "{{ mysql_version.stdout }}"
 
-    

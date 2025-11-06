@@ -1,9 +1,8 @@
 ---
 - name: Prepare server for deployment
-  hosts: web_server_instances  # или all, или web_server_1
+  hosts: web_server_instances
   gather_facts: true
   
-  # Убираем переменные подключения, они теперь в host_vars
   vars:
     ansible_become: yes
     ansible_become_method: sudo
